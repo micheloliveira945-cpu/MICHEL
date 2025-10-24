@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import type { Vehicle, Claim } from '../types';
-import { Save, PlusCircle, Trash2, Pencil } from 'lucide-react'; // Import Pencil icon
+import { Save } from 'lucide-react';
 
 interface CadastroTabProps {
   baseVehicles: Vehicle[];
   claims: Claim[];
   onAddClaim: (claim: Claim) => void;
-  onUpdateClaim: (claim: Claim) => void; // New prop for updating
-  onDeleteClaim: (claimId: string) => void; // New prop for deleting
 }
 
 const initialFormState = {
+  id: '',
   dataExecucao: new Date().toISOString().split('T')[0],
   motorista: '',
   responsavel: 'Orleando Emmanuel da Silva',
@@ -34,10 +33,9 @@ const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label
   </div>
 );
 
-export const CadastroTab: React.FC<CadastroTabProps> = ({ baseVehicles, claims, onAddClaim, onUpdateClaim, onDeleteClaim }) => {
+export const CadastroTab: React.FC<CadastroTabProps> = ({ baseVehicles, claims, onAddClaim }) => {
   const [formData, setFormData] = useState<Omit<Claim, 'id'> & { id?: string }>(initialFormState);
   const [formError, setFormError] = useState<string | null>(null);
-  const [editingClaimId, setEditingClaimId] = useState<string | null>(null); // State to track if we are editing
 
   useEffect(() => {
     if (formData.placa) {
@@ -45,7 +43,6 @@ export const CadastroTab: React.FC<CadastroTabProps> = ({ baseVehicles, claims, 
       if (vehicle) {
         setFormData(prev => ({ ...prev, ...vehicle }));
       } else {
-        // Clear vehicle-related fields if plate not found in base
         setFormData(prev => ({
           ...prev,
           marca: '',
@@ -79,27 +76,8 @@ export const CadastroTab: React.FC<CadastroTabProps> = ({ baseVehicles, claims, 
     }
 
     setFormError(null);
-
-    const claimToSave: Claim = { ...formData, ...vehicleData, valor: Number(formData.valor) } as Claim;
-
-    if (editingClaimId) {
-      onUpdateClaim({ ...claimToSave, id: editingClaimId });
-      setEditingClaimId(null);
-    } else {
-      onAddClaim({ ...claimToSave, id: new Date().toISOString() }); // Use current ISO string as unique ID
-    }
-    setFormData(initialFormState); // Reset form
-  };
-
-  const handleEdit = (claim: Claim) => {
-    setFormData(claim); // Pre-fill form with claim data
-    setEditingClaimId(claim.id); // Set editing mode
-  };
-
-  const handleCancelEdit = () => {
-    setFormData(initialFormState); // Clear form
-    setEditingClaimId(null); // Exit editing mode
-    setFormError(null); // Clear any errors
+    onAddClaim({ ...formData, ...vehicleData, id: new Date().toISOString() });
+    setFormData(initialFormState);
   };
 
   return (
@@ -130,8 +108,8 @@ export const CadastroTab: React.FC<CadastroTabProps> = ({ baseVehicles, claims, 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Culpabilidade</label>
             <select name="culpabilidade" value={formData.culpabilidade} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-              <option value="Não">Não</option>
-              <option value="Sim">Sim</option>
+              <option>Não</option>
+              <option>Sim</option>
             </select>
           </div>
           <InputField label="Valor (R$)" type="number" name="valor" value={formData.valor} onChange={handleChange} step="0.01" min="0" />
@@ -146,19 +124,10 @@ export const CadastroTab: React.FC<CadastroTabProps> = ({ baseVehicles, claims, 
              <div className="text-red-600 bg-red-100 p-3 rounded-md text-sm">{formError}</div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4">
-          {editingClaimId && (
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="flex items-center gap-2 px-5 py-2 text-gray-700 bg-gray-200 font-semibold rounded-lg shadow-md hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Cancelar Edição
-            </button>
-          )}
+        <div className="flex justify-end pt-4">
           <button type="submit" className="flex items-center gap-2 px-5 py-2 text-white font-semibold rounded-lg shadow-md transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" style={{ backgroundColor: '#004aad' }}>
             <Save size={18} />
-            {editingClaimId ? 'Atualizar Cadastro' : 'Salvar Cadastro'}
+            Salvar Cadastro
           </button>
         </div>
       </form>
@@ -173,23 +142,20 @@ export const CadastroTab: React.FC<CadastroTabProps> = ({ baseVehicles, claims, 
                 <th className="px-6 py-3">Placa</th>
                 <th className="px-6 py-3">Marca</th>
                 <th className="px-6 py-3">Modelo</th>
-                <th className="px-6 py-3">Classificação</th>
                 <th className="px-6 py-3">Motorista</th>
                 <th className="px-6 py-3">Valor (R$)</th>
                 <th className="px-6 py-3">Culpabilidade</th>
                 <th className="px-6 py-3">Observações</th>
-                <th className="px-6 py-3 text-center">Ações</th> {/* New Actions column */}
               </tr>
             </thead>
             <tbody>
               {claims.length > 0 ? (
                 claims.map(claim => (
                   <tr key={claim.id} className="bg-white border-b hover:bg-gray-50">
-                    <td className="px-6 py-4">{new Date(claim.dataExecucao + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                    <td className="px-6 py-4">{new Date(claim.dataExecucao + 'T00:00:00').toLocaleDateString()}</td>
                     <td className="px-6 py-4 font-mono font-bold text-gray-900">{claim.placa}</td>
                     <td className="px-6 py-4">{claim.marca}</td>
                     <td className="px-6 py-4">{claim.modelo}</td>
-                    <td className="px-6 py-4">{claim.classificacao}</td>
                     <td className="px-6 py-4">{claim.motorista}</td>
                     <td className="px-6 py-4">{claim.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     <td className="px-6 py-4">
@@ -197,30 +163,12 @@ export const CadastroTab: React.FC<CadastroTabProps> = ({ baseVehicles, claims, 
                             {claim.culpabilidade}
                         </span>
                     </td>
-                    <td className="px-6 py-4 max-w-xs whitespace-pre-wrap break-words">{claim.observacoes}</td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => handleEdit(claim)}
-                          className="p-2 text-blue-600 hover:text-blue-800 rounded-md hover:bg-blue-50 transition-colors"
-                          title="Editar Sinistro"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => onDeleteClaim(claim.id)}
-                          className="p-2 text-red-600 hover:text-red-800 rounded-md hover:bg-red-50 transition-colors"
-                          title="Excluir Sinistro"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+                    <td className="px-6 py-4 max-w-xs truncate" title={claim.observacoes}>{claim.observacoes}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={10} className="text-center py-10 text-gray-500">
+                  <td colSpan={8} className="text-center py-10 text-gray-500">
                     Nenhum sinistro cadastrado.
                   </td>
                 </tr>

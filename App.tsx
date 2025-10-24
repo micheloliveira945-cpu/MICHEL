@@ -1,60 +1,55 @@
+
 import React, { useState, useEffect } from 'react';
 import { BaseTab } from './components/BaseTab';
 import { CadastroTab } from './components/CadastroTab';
-import { DashboardTab } from './components/DashboardTab'; // Import the new DashboardTab
+import { DashboardTab } from './components/DashboardTab'; // Importa o novo componente
 import type { Vehicle, Claim } from './types';
-import { Database, FileText, BarChart2 } from 'lucide-react'; // Import BarChart2 icon
+import { Database, FileText, PieChart } from 'lucide-react'; // Importa PieChart para o ícone
 
-type Tab = 'base' | 'cadastro' | 'dashboard'; // Add 'dashboard' to Tab type
+type Tab = 'base' | 'cadastro' | 'dashboard'; // Adiciona 'dashboard' ao tipo Tab
 
 const App: React.FC = () => {
-  // Initialize state from localStorage or with empty arrays
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    try {
-      const storedVehicles = localStorage.getItem('vehiclesData');
-      return storedVehicles ? JSON.parse(storedVehicles) : [];
-    } catch (error) {
-      console.error("Error parsing vehicles from localStorage", error);
-      return [];
-    }
-  });
-  const [claims, setClaims] = useState<Claim[]>(() => {
-    try {
-      const storedClaims = localStorage.getItem('claimsData');
-      return storedClaims ? JSON.parse(storedClaims) : [];
-    } catch (error) {
-      console.error("Error parsing claims from localStorage", error);
-      return [];
-    }
-  });
-
-  // Declare activeTab state and its setter
   const [activeTab, setActiveTab] = useState<Tab>('base');
 
-  // Save vehicles to localStorage whenever the vehicles state changes
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    try {
+      const savedVehicles = localStorage.getItem('sinistros_vehicles');
+      return savedVehicles ? JSON.parse(savedVehicles) : [];
+    } catch (error) {
+      console.error("Failed to load vehicles from localStorage", error);
+      return [];
+    }
+  });
+
+  const [claims, setClaims] = useState<Claim[]>(() => {
+    try {
+      const savedClaims = localStorage.getItem('sinistros_claims');
+      return savedClaims ? JSON.parse(savedClaims) : [];
+    } catch (error) {
+      console.error("Failed to load claims from localStorage", error);
+      return [];
+    }
+  });
+
   useEffect(() => {
-    localStorage.setItem('vehiclesData', JSON.stringify(vehicles));
+    try {
+      localStorage.setItem('sinistros_vehicles', JSON.stringify(vehicles));
+    } catch (error) {
+      console.error("Failed to save vehicles to localStorage", error);
+    }
   }, [vehicles]);
 
-  // Save claims to localStorage whenever the claims state changes
   useEffect(() => {
-    localStorage.setItem('claimsData', JSON.stringify(claims));
+    try {
+      localStorage.setItem('sinistros_claims', JSON.stringify(claims));
+    } catch (error) {
+      console.error("Failed to save claims to localStorage", error);
+    }
   }, [claims]);
+
 
   const handleAddClaim = (claim: Claim) => {
     setClaims(prevClaims => [...prevClaims, claim]);
-  };
-
-  const handleUpdateClaim = (updatedClaim: Claim) => {
-    setClaims(prevClaims =>
-      prevClaims.map(claim => (claim.id === updatedClaim.id ? updatedClaim : claim))
-    );
-  };
-
-  const handleDeleteClaim = (claimId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este sinistro?')) {
-      setClaims(prevClaims => prevClaims.filter(claim => claim.id !== claimId));
-    }
   };
 
   const TabButton: React.FC<{ tabName: Tab; label: string; icon: React.ReactNode }> = ({ tabName, label, icon }) => (
@@ -85,7 +80,7 @@ const App: React.FC = () => {
         <div className="flex border-b border-gray-300">
           <TabButton tabName="base" label="Base" icon={<Database size={18} />} />
           <TabButton tabName="cadastro" label="Cadastro" icon={<FileText size={18} />} />
-          <TabButton tabName="dashboard" label="Dashboard" icon={<BarChart2 size={18} />} /> {/* New Tab Button */}
+          <TabButton tabName="dashboard" label="Dashboard" icon={<PieChart size={18} />} /> {/* Novo botão da aba */}
         </div>
 
         <div className="bg-white shadow-lg rounded-b-lg rounded-tr-lg p-6 mt-[-1px]">
@@ -95,16 +90,9 @@ const App: React.FC = () => {
               baseVehicles={vehicles}
               claims={claims}
               onAddClaim={handleAddClaim}
-              onUpdateClaim={handleUpdateClaim} // Pass update function
-              onDeleteClaim={handleDeleteClaim} // Pass delete function
             />
           )}
-          {activeTab === 'dashboard' && (
-            <DashboardTab 
-              vehicles={vehicles}
-              claims={claims}
-            />
-          )}
+          {activeTab === 'dashboard' && <DashboardTab claims={claims} />} {/* Renderização do novo componente */}
         </div>
       </main>
     </div>
