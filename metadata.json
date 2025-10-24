@@ -1,0 +1,5 @@
+{
+  "name": "Controle de Sinistros",
+  "description": "Uma aplicação para gerenciar a base de veículos e cadastrar sinistros, com importação de dados via planilha Excel.",
+  "requestFramePermissions": []
+}
