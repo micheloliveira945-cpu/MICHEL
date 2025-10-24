@@ -1,5 +1,4 @@
-
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import type { Vehicle } from '../types';
 import { Upload, FileCheck, AlertTriangle } from 'lucide-react';
 
@@ -13,6 +12,16 @@ declare const XLSX: any;
 export const BaseTab: React.FC<BaseTabProps> = ({ vehicles, setVehicles }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Effect to automatically dismiss notification after a few seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000); // Dismiss after 5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -94,7 +103,7 @@ export const BaseTab: React.FC<BaseTabProps> = ({ vehicles, setVehicles }) => {
       </div>
 
       {notification && (
-        <div className={`flex items-center gap-3 p-4 rounded-lg ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        <div id="notification-banner" className={`flex items-center gap-3 p-4 rounded-lg ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           {notification.type === 'success' ? <FileCheck size={20} /> : <AlertTriangle size={20} />}
           <p className="font-medium">{notification.message}</p>
           <button onClick={() => setNotification(null)} className="ml-auto text-lg font-bold">&times;</button>
